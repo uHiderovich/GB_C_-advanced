@@ -16,7 +16,28 @@
 Данные на выходе: Bb.
 */
 
+#include <stdio.h>
+#include <ctype.h>
+
+#define K 26
+
 int main() {
+  unsigned int N = 0;
+  char c, diffChar;
+
+  scanf("%d ", &N);
+
+  while ((c = getchar()) != '.') {
+    if (isalpha(c)) {
+      diffChar = (isupper(c) ? 'A' : 'a');
+      printf("%c", (c - diffChar + N) % K + diffChar);
+    }
+    else {
+      putchar(c);
+    }
+  }
+
+  printf(".\n");
 
   return 0;
 }

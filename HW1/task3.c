@@ -16,7 +16,24 @@
 Данные на выходе: 0
 */
 
-int main() {
+#include <stdio.h>
 
+int main() {
+  unsigned int N, res = 0;
+  unsigned long int current = 0;
+
+  scanf("%d", &N);
+
+  if (N > 1000000) {
+    printf("Число должно быть N <= 1 000 000\n");
+    return 0;
+  }
+
+  for (int i = 0; i < N; i++) {
+    scanf("%d", &current);
+    res = res ^ current;
+  }
+
+  printf("%d\n", res);
   return 0;
 }
