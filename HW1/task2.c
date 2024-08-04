@@ -15,7 +15,22 @@
 Данные на выходе: 1
 */
 
+#include <stdio.h>
+#include <stdint.h>
+
+#define BITS_COUNT 8
+
 int main() {
+  uint32_t N, res, invertedHighByte;
+
+  scanf("%u", &N);
+
+  int diff = (32 - BITS_COUNT);
+  invertedHighByte = (~(N >> diff) << diff);
+
+  res = (invertedHighByte | ((N << BITS_COUNT) >> BITS_COUNT));
+
+  printf("%u\n", res);
 
   return 0;
 }
