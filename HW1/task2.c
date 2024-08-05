@@ -19,16 +19,17 @@
 #include <stdint.h>
 
 #define BITS_COUNT 8
+#define DIFF 32 - BITS_COUNT
 
 int main() {
-  uint32_t N, res, invertedHighByte;
+  uint32_t N, res, invertedHighByte, restOfNumber;
 
   scanf("%u", &N);
 
-  int diff = (32 - BITS_COUNT);
-  invertedHighByte = (~(N >> diff) << diff);
+  invertedHighByte = (~(N >> DIFF) << DIFF);
+  restOfNumber = ((N << BITS_COUNT) >> BITS_COUNT);
 
-  res = (invertedHighByte | ((N << BITS_COUNT) >> BITS_COUNT));
+  res = (invertedHighByte | restOfNumber);
 
   printf("%u\n", res);
 
