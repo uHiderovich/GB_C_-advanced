@@ -6,6 +6,13 @@
 #define MAX_X 15
 #define MAX_Y 15
 
+enum direction_t {
+  LEFT,
+  RIGHT,
+  UP,
+  DOWN
+};
+
 typedef struct tail_t {
   int x;
   int y;
@@ -16,6 +23,8 @@ typedef struct snake_t {
   int y;
   struct tail_t* tail;
   size_t tsize;
+  enum direction_t direction;
+  enum direction_t forbiddenDirection;
 } snake_t;
 
 struct snake_t initSnake(int x, int y, size_t tsize) {
@@ -24,6 +33,8 @@ struct snake_t initSnake(int x, int y, size_t tsize) {
   snake.y = y;
   snake.tsize = tsize;
   snake.tail = (tail_t*)malloc(sizeof(tail_t) * 100);
+  snake.direction = LEFT;
+  snake.forbiddenDirection = RIGHT;
 
   for (int i = 0; i < tsize; ++i) {
     snake.tail[i].x = x + i + 1;
@@ -57,7 +68,32 @@ void printSnake(struct snake_t snake) {
   }
 }
 
-snake_t moveLeft(snake_t snake) {
+void setDirection(snake_t snake, int key_direction) {
+  enum direction_t direction;
+
+  switch (key_direction) {
+  case 119:
+    direction = UP;
+    break;
+  case 97:
+    direction = LEFT;
+    break;
+  case 115:
+    direction = DOWN;
+    break;
+  case 100:
+    direction = RIGHT;
+    break;
+  }
+
+  _Bool isForbiddenDirection = (direction == snake.forbiddenDirection);
+
+  if (!isForbiddenDirection) {
+    snake.direction = direction;
+  }
+}
+
+snake_t move(snake_t snake) {
   for (int i = snake.tsize - 1; i > 0; i--) {
     snake.tail[i] = snake.tail[i - 1];
   }
@@ -65,7 +101,24 @@ snake_t moveLeft(snake_t snake) {
   snake.tail[0].x = snake.x;
   snake.tail[0].y = snake.y;
 
-  snake.x = snake.x - 1;
+  switch (snake.direction) {
+  case LEFT:
+    snake.x = snake.x - 1;
+    snake.forbiddenDirection = RIGHT;
+    break;
+  case RIGHT:
+    snake.x = snake.x + 1;
+    snake.forbiddenDirection = LEFT;
+    break;
+  case UP:
+    snake.y = snake.y - 1;
+    snake.forbiddenDirection = DOWN;
+    break;
+  case DOWN:
+    snake.y = snake.y + 1;
+    snake.forbiddenDirection = UP;
+    break;
+  }
 
   if (snake.x < 0) {
     snake.x = MAX_X - 1;
@@ -77,12 +130,15 @@ snake_t moveLeft(snake_t snake) {
 int main() {
   struct snake_t snake = initSnake(10, 5, 2);
   printSnake(snake);
+  int key_direction = 0;
 
   while (1) {
-    snake = moveLeft(snake);
+    snake = move(snake);
     sleep(1);
     system("cls");
     printSnake(snake);
+    key_direction = getch();
+    setDirection(snake, key_direction);
   }
 
   return 0;
