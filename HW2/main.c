@@ -12,6 +12,7 @@ enum controls_t {
   KEY_UP = 119,
   KEY_DOWN = 115,
   KEY_STOP_GAMGE = 27,
+  KEY_PAUSE_GAMGE = 0,
 };
 
 enum direction_t {
@@ -32,7 +33,6 @@ typedef struct snake_t {
   struct tail_t* tail;
   size_t tsize;
   enum direction_t direction;
-  enum direction_t forbiddenDirection;
   enum controls_t controls;
 } snake_t;
 
@@ -43,7 +43,6 @@ struct snake_t initSnake(int x, int y, size_t tsize) {
   snake.tsize = tsize;
   snake.tail = (tail_t*)malloc(sizeof(tail_t) * 100);
   snake.direction = LEFT;
-  snake.forbiddenDirection = RIGHT;
 
   for (int i = 0; i < tsize; ++i) {
     snake.tail[i].x = x + i + 1;
@@ -76,29 +75,27 @@ void printSnake(struct snake_t snake) {
   }
 }
 
+void printLevel(struct snake_t snake) {
+  printf("Level: %d\n", snake.tsize);
+}
+
+void printExit(struct snake snake) {
+  printf("Game Over!\n");
+}
+
 void setDirection(snake_t* snake, int keyDirection) {
   enum direction_t newDirection;
 
-  switch (keyDirection) {
-  case KEY_UP:
-    newDirection = UP;
-    break;
-  case KEY_LEFT:
-    newDirection = LEFT;
-    break;
-  case KEY_DOWN:
-    newDirection = DOWN;
-    break;
-  case KEY_RIGHT:
-    newDirection = RIGHT;
-    break;
-  default:
-    break;
+  if (
+    (keyDirection == KEY_UP && snake->direction == DOWN) ||
+    (keyDirection == KEY_DOWN && snake->direction == UP) ||
+    (keyDirection == KEY_LEFT && snake->direction == RIGHT) ||
+    (keyDirection == KEY_RIGHT && snake->direction == LEFT)
+    ) {
+    return;
   }
 
-  if (newDirection != snake->forbiddenDirection) {
-    snake->direction = newDirection;
-  }
+  snake->direction = newDirection;
 }
 
 snake_t move(snake_t snake) {
@@ -112,19 +109,15 @@ snake_t move(snake_t snake) {
   switch (snake.direction) {
   case LEFT:
     snake.x = snake.x - 1;
-    snake.forbiddenDirection = RIGHT;
     break;
   case RIGHT:
     snake.x = snake.x + 1;
-    snake.forbiddenDirection = LEFT;
     break;
   case UP:
     snake.y = snake.y - 1;
-    snake.forbiddenDirection = DOWN;
     break;
   case DOWN:
     snake.y = snake.y + 1;
-    snake.forbiddenDirection = UP;
     break;
   default:
     break;
@@ -156,6 +149,7 @@ int main() {
     sleep(1);
     system("cls");
     printSnake(snake);
+    printLevel(snake);
 
     if (kbhit()) {
       keyDirection = getch();
