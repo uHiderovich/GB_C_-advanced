@@ -12,6 +12,7 @@ enum controls_t {
   KEY_UP = 119,
   KEY_DOWN = 115,
   KEY_STOP_GAMGE = 27,
+  KEY_PAUSE_GAMGE = 0,
 };
 
 enum direction_t {
@@ -72,6 +73,14 @@ void printSnake(struct snake_t snake) {
     }
     printf("\n");
   }
+}
+
+void printLevel(struct snake_t snake) {
+  printf("Level: %d\n", snake.tsize);
+}
+
+void printExit(struct snake snake) {
+  printf("Game Over!\n");
 }
 
 void setDirection(snake_t* snake, int keyDirection) {
@@ -139,6 +148,8 @@ int main() {
     snake = move(snake);
     sleep(1);
     system("cls");
+    printSnake(snake);
+    printLevel(snake);
 
     if (kbhit()) {
       keyDirection = getch();
