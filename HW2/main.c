@@ -4,8 +4,16 @@
 #include <unistd.h>
 #include <stdint.h>
 
+#define SET_RANDOM(min, max) ((min) + rand() % ((max) - (min) + 1))
+
+#define STRAT_X 10
+#define START_Y 10
 #define MAX_X 15
 #define MAX_Y 15
+#define START_SNAKE_SIZE 2
+#define MAX_SNAKE_SIZE 3
+#define START_TIME 1000000
+#define TIME_STEP 100000
 
 enum controls_t {
   KEY_LEFT = 97,
@@ -13,7 +21,7 @@ enum controls_t {
   KEY_UP = 119,
   KEY_DOWN = 115,
   KEY_STOP_GAMGE = 27,
-  KEY_PAUSE_GAMGE = 0,
+  KEY_PAUSE_GAMGE = 112,
 };
 
 enum direction_t {
@@ -43,16 +51,12 @@ typedef struct food_t {
   uint8_t y;
 } food_t;
 
-int setRandom(uint8_t min, uint8_t max) {
-  return min + rand() % (max - min + 1);
-}
-
 food_t initFood(snake_t snake, uint8_t max_x, uint8_t max_y) {
   food_t food;
 
   while (1) {
-    food.x = setRandom(0, max_x);
-    food.y = setRandom(0, max_y);
+    food.x = SET_RANDOM(0, max_x);
+    food.y = SET_RANDOM(0, max_y);
 
     if (snake.x != food.x && snake.y != food.y) {
       break;
@@ -71,14 +75,13 @@ snake_t initSnake(uint8_t x, uint8_t y, size_t tsize, size_t max_size) {
   snake.tail = (tail_t*)malloc(sizeof(tail_t) * 100);
   snake.direction = LEFT;
 
-  for (int i = 0; i < tsize; ++i) {
+  for (size_t i = 0; i < tsize; ++i) {
     snake.tail[i].x = x + i + 1;
     snake.tail[i].y = y;
   }
 
   return snake;
 }
-
 
 void addTail(snake_t* snake) {
   if (snake->tsize < snake->max_size) {
@@ -98,7 +101,7 @@ void printGameField(snake_t snake, food_t food) {
 
   matrix[snake.x][snake.y] = '@';
 
-  for (int i = 0; i < snake.tsize; ++i) {
+  for (size_t i = 0; i < snake.tsize; ++i) {
     matrix[snake.tail[i].x][snake.tail[i].y] = '*';
   }
 
@@ -110,11 +113,6 @@ void printGameField(snake_t snake, food_t food) {
     }
     printf("\n");
   }
-}
-
-
-void printExit(snake_t snake) {
-  printf("Game Over!\n");
 }
 
 void setDirection(snake_t* snake, uint8_t keyDirection) {
@@ -145,8 +143,31 @@ void setDirection(snake_t* snake, uint8_t keyDirection) {
   }
 }
 
+void checkFieldBoundaries(snake_t* snake) {
+  if (snake->x < 0) {
+    snake->x = MAX_X - 1;
+  }
+  else if (snake->x >= MAX_X) {
+    snake->x = 0;
+  }
+  else if (snake->y < 0) {
+    snake->y = MAX_Y - 1;
+  }
+  else if (snake->y >= MAX_Y) {
+    snake->y = 0;
+  }
+}
+
+int checkPause(_Bool isPaused, uint8_t keyDirection) {
+  if (keyDirection == KEY_PAUSE_GAMGE) {
+    isPaused = !isPaused;
+  }
+
+  return isPaused;
+}
+
 snake_t move(snake_t snake) {
-  for (int i = snake.tsize - 1; i > 0; i--) {
+  for (size_t i = snake.tsize - 1; i > 0; i--) {
     snake.tail[i] = snake.tail[i - 1];
   }
 
@@ -170,18 +191,7 @@ snake_t move(snake_t snake) {
     break;
   }
 
-  if (snake.x < 0) {
-    snake.x = MAX_X - 1;
-  }
-  else if (snake.x >= MAX_X) {
-    snake.x = 0;
-  }
-  else if (snake.y < 0) {
-    snake.y = MAX_Y - 1;
-  }
-  else if (snake.y >= MAX_Y) {
-    snake.y = 0;
-  }
+  checkFieldBoundaries(&snake);
 
   return snake;
 }
@@ -189,15 +199,34 @@ snake_t move(snake_t snake) {
 int main() {
   uint8_t keyDirection = 0;
   uint8_t level = 1;
+  _Bool isPaused = 0;
 
-  snake_t snake = initSnake(10, 5, 2, 10);
+  snake_t snake = initSnake(STRAT_X, START_Y, START_SNAKE_SIZE, MAX_SNAKE_SIZE);
   food_t food = initFood(snake, MAX_X, MAX_Y);
 
   printGameField(snake, food);
 
   while (keyDirection != KEY_STOP_GAMGE) {
-    snake = move(snake);
-    sleep(1);
+    if (kbhit()) {
+      keyDirection = getch();
+      setDirection(&snake, keyDirection);
+      isPaused = checkPause(isPaused, keyDirection);
+    }
+
+    printf("Level: %d\n", level);
+
+    if (isPaused) {
+      printf("Pause..\n");
+    }
+    else {
+      snake = move(snake);
+    }
+
+    if (snake.tsize == snake.max_size) {
+      break;
+    }
+
+    usleep(START_TIME - (TIME_STEP * level));
     system("cls");
 
     if (snake.x == food.x && snake.y == food.y) {
@@ -206,15 +235,10 @@ int main() {
       level++;
     }
 
-    printf("Level: %d\n", level);
-
     printGameField(snake, food);
-
-    if (kbhit()) {
-      keyDirection = getch();
-      setDirection(&snake, keyDirection);
-    }
   }
+
+  printf("Game Over!\n");
 
   return 0;
 }
