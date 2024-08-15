@@ -11,9 +11,9 @@
 #define MAX_X 15
 #define MAX_Y 15
 #define START_SNAKE_SIZE 2
-#define MAX_SNAKE_SIZE 3
 #define START_TIME 1000000
 #define TIME_STEP 100000
+#define MAX_LEVEL 10
 
 enum controls_t {
   KEY_LEFT = 97,
@@ -66,12 +66,11 @@ food_t initFood(snake_t snake, uint8_t max_x, uint8_t max_y) {
   return food;
 }
 
-snake_t initSnake(uint8_t x, uint8_t y, size_t tsize, size_t max_size) {
+snake_t initSnake(uint8_t x, uint8_t y, size_t tsize) {
   snake_t snake;
   snake.x = x;
   snake.y = y;
   snake.tsize = tsize;
-  snake.max_size = max_size;
   snake.tail = (tail_t*)malloc(sizeof(tail_t) * 100);
   snake.direction = LEFT;
 
@@ -84,9 +83,7 @@ snake_t initSnake(uint8_t x, uint8_t y, size_t tsize, size_t max_size) {
 }
 
 void addTail(snake_t* snake) {
-  if (snake->tsize < snake->max_size) {
-    snake->tsize += 1;
-  }
+  snake->tsize += 1;
 }
 
 // @**
@@ -201,7 +198,7 @@ int main() {
   uint8_t level = 1;
   _Bool isPaused = 0;
 
-  snake_t snake = initSnake(STRAT_X, START_Y, START_SNAKE_SIZE, MAX_SNAKE_SIZE);
+  snake_t snake = initSnake(STRAT_X, START_Y, START_SNAKE_SIZE);
   food_t food = initFood(snake, MAX_X, MAX_Y);
 
   printGameField(snake, food);
@@ -222,7 +219,7 @@ int main() {
       snake = move(snake);
     }
 
-    if (snake.tsize == snake.max_size) {
+    if (snake.tsize == MAX_LEVEL) {
       break;
     }
 
