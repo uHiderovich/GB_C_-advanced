@@ -18,7 +18,6 @@ python_has_list_comprehensions
 
 #define MAXLENGTH 104
 
-// Функция для вычисления Z-функции
 void ZFunction(const char* s, int* z, int n) {
   int l = 0, r = 0;
   z[0] = n;
@@ -36,7 +35,6 @@ void ZFunction(const char* s, int* z, int n) {
   }
 }
 
-// Функция для поиска наибольшего префикса и суффикса
 int SearchPrefixSuffix(const char* s1, const char* s2, int isPrefix) {
   int l1 = strlen(s1);
   int l2 = strlen(s2);
