@@ -15,7 +15,30 @@
 Данные на выход: 847660528
 */
 
+#include <locale.h>
+#include <stdio.h>
+
+long long binomialCoefficient(int n, int k) {
+  if (k > n - k) {
+    k = n - k;
+  }
+
+  long long result = 1;
+  for (int i = 0; i < k; ++i) {
+    result = result * (n - i) / (i + 1);
+  }
+  return result;
+}
+
 int main() {
-  /* code */
+  setlocale(LC_ALL, "Rus");
+
+  int N, M;
+  scanf("Введите два целых числа N и K:  %d %d", &N, &M);
+
+  long long result = binomialCoefficient(N, M);
+
+  printf("Результат: %lld\n", result);
+
   return 0;
 }
