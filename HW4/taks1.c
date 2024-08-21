@@ -18,27 +18,27 @@
 #include <locale.h>
 #include <stdio.h>
 
-long long binomialCoefficient(int n, int k) {
-  if (k > n - k) {
-    k = n - k;
+int binomialCoefficient(int n, int k) {
+  const int maxN = n;
+  int C[maxN + 1][maxN + 1];
+
+  for (int i = 0; i <= maxN; i++) {
+    C[i][0] = C[i][i] = 1;
+    for (int j = 1; j < i; j++) {
+      C[i][j] = C[i - 1][j - 1] + C[i - 1][j];
+    }
   }
 
-  long long result = 1;
-  for (int i = 0; i < k; ++i) {
-    result = result * (n - i) / (i + 1);
-  }
-  return result;
+  return C[n][k];
 }
 
 int main() {
   setlocale(LC_ALL, "Rus");
 
-  int N, M;
-  scanf("Введите два целых числа N и K:  %d %d", &N, &M);
+  int n, k;
+  scanf("%d %d", &n, &k);
 
-  long long result = binomialCoefficient(N, M);
-
-  printf("Результат: %lld\n", result);
+  printf("Результат: %d\n", binomialCoefficient(n, k));
 
   return 0;
 }
