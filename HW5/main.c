@@ -80,7 +80,8 @@ void addTail(snake_t* snake) {
 void addSnakeOnField(snake_t snake, char headSymbol, char field[][MAX_Y]) {
   field[snake.x][snake.y] = headSymbol;
   for (size_t i = 0; i < snake.tsize; ++i) {
-    field[snake.tail[i].x][snake.tail[i].y] = getColor(snake.color) + '*' + "\033[0m";
+    // field[snake.tail[i].x][snake.tail[i].y] = getColor(snake.color) + '*' + "\033[0m";
+    snprintf(field[snake.tail[i].x][snake.tail[i].y], 3, "%s%s%s", getColor(snake.color), '*', "\033[0m");
   }
 }
 
