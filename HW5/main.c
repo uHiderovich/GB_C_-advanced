@@ -8,18 +8,22 @@
 
 #define STRAT_X 10
 #define START_Y 10
-#define MAX_X 15
-#define MAX_Y 15
+#define MAX_X 30
+#define MAX_Y 30
 #define START_SNAKE_SIZE 2
 #define START_TIME 1000000
 #define TIME_STEP 100000
-#define MAX_LEVEL 10
+#define MAX_SIZE 10
 
 enum controls_t {
   KEY_LEFT = 97,
   KEY_RIGHT = 100,
   KEY_UP = 119,
   KEY_DOWN = 115,
+  KEY_LEFT_2 = 97,
+  KEY_RIGHT_2 = 100,
+  KEY_UP_2 = 119,
+  KEY_DOWN_2 = 115,
   KEY_STOP_GAMGE = 27,
   KEY_PAUSE_GAMGE = 112,
 };
@@ -97,7 +101,7 @@ void addTail(snake_t* snake) {
 }
 
 // @**
-void printGameField(snake_t snake, food_t food) {
+void printGameField(snake_t snake, snake_t snake2, food_t food) {
   char matrix[MAX_X][MAX_Y];
 
   for (int i = 0; i < MAX_X; ++i) {
@@ -107,9 +111,14 @@ void printGameField(snake_t snake, food_t food) {
   }
 
   matrix[snake.x][snake.y] = '@';
+  matrix[snake2.x][snake2.y] = '&';
 
   for (size_t i = 0; i < snake.tsize; ++i) {
     matrix[snake.tail[i].x][snake.tail[i].y] = '*';
+  }
+
+  for (size_t i = 0; i < snake2.tsize; ++i) {
+    matrix[snake2.tail[i].x][snake2.tail[i].y] = '*';
   }
 
   matrix[food.x][food.y] = '*';
@@ -122,7 +131,7 @@ void printGameField(snake_t snake, food_t food) {
   }
 }
 
-void setDirection(snake_t* snake, uint8_t keyDirection) {
+void setDirection(snake_t* snake, snake_t* snake2, uint8_t keyDirection) {
   if (
     (keyDirection == KEY_UP && snake->direction == DOWN) ||
     (keyDirection == KEY_DOWN && snake->direction == UP) ||
@@ -218,10 +227,12 @@ int main() {
   uint8_t level = 1;
   _Bool isPaused = 0;
 
-  snake_t snake = initSnake(STRAT_X, START_Y, START_SNAKE_SIZE);
+  snake_t snake = initSnake(MAX_X / 3, MAX_Y / 3, START_SNAKE_SIZE);
+  snake_t snake2 = initSnake(MAX_X / 2, MAX_Y / 2, START_SNAKE_SIZE);
+
   food_t food = initFood(snake, MAX_X, MAX_Y);
 
-  printGameField(snake, food);
+  printGameField(snake, snake2, food);
 
   while (keyDirection != KEY_STOP_GAMGE) {
     if (kbhit()) {
@@ -237,9 +248,10 @@ int main() {
     }
     else {
       snake = move(snake);
+      snake2 = move(snake2);
     }
 
-    if (snake.tsize == MAX_LEVEL || isCrush(snake)) {
+    if (snake.tsize == MAX_SIZE || snake2.tsize == MAX_SIZE || isCrush(snake) || isCrush(snake2)) {
       break;
     }
 
@@ -252,7 +264,13 @@ int main() {
       level++;
     }
 
-    printGameField(snake, food);
+    if (snake2.x == food.x && snake2.y == food.y) {
+      addTail(&snake2);
+      food = initFood(snake2, MAX_X, MAX_Y);
+      level++;
+    }
+
+    printGameField(snake, snake2, food);
   }
 
   printf("Game Over!\n");
