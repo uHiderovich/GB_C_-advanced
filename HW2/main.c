@@ -36,10 +36,10 @@ enum controls_t {
   KEY_DOWN = 115,  // s
   KEY_LEFT = 97,   // a
 
-  KEY_UP_2 = 72,    // СЃС‚СЂРµР»РєР° РІРІРµСЂС…
-  KEY_RIGHT_2 = 77, // СЃС‚СЂРµР»РєР° РІРїСЂР°РІРѕ
-  KEY_DOWN_2 = 80,  // СЃС‚СЂРµР»РєР° РІРЅРёР·
-  KEY_LEFT_2 = 75,  // СЃС‚СЂРµР»РєР° РІР»РµРІРѕ
+  KEY_UP_2 = 72,    // стрелка вверх
+  KEY_RIGHT_2 = 77, // стрелка вправо
+  KEY_DOWN_2 = 80,  // стрелка вниз
+  KEY_LEFT_2 = 75,  // стрелка влево
 
   KEY_STOP_GAMGE = 27,
   KEY_PAUSE_GAMGE = 112,
@@ -177,7 +177,7 @@ void printGameField(snake_t snake, snake_t snake2, food_t food, game_config_t ga
     for (int i = 0; i < MAX_X; ++i) {
       printf("%c", game_field[i][j]);
 
-      // РћРєСЂР°СЃ Р·РјРµР№РєРё Рё РµРґС‹
+      // Окрас змейки и еды
       // if (game_field[i][j] == '*' || game_field[i][j] == '@') {
       //   printf("%s%c%s", getColor(game_config.snake_color), game_field[i][j], RESET_COLOR);
       // }
