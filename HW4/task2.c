@@ -72,7 +72,7 @@ int main() {
   setlocale(LC_ALL, "Rus");
 
   char expression[MAX];
-  char output[MAX + 1];
+  char output[MAX];
 
   fgets(expression, MAX, stdin);
 
