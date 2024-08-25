@@ -64,13 +64,15 @@ void infixToPostfix(const char* expression, char* output) {
     output[k++] = stack[top--];
     output[k++] = ' ';
   }
+
+  output[k - 1] = '\0';
 }
 
 int main() {
   setlocale(LC_ALL, "Rus");
 
   char expression[MAX];
-  char output[MAX];
+  char output[MAX + 1];
 
   fgets(expression, MAX, stdin);
 
