@@ -321,7 +321,7 @@ snake_t move(snake_t* snake) {
     break;
   }
 
-  checkFieldBoundaries(&snake);
+  checkFieldBoundaries(snake);
 }
 
 void play(game_config_t game_config) {
