@@ -307,13 +307,18 @@ int distance(const Drone drone, Purpose purpose) { // РІС‹С‡РёСЃР»
 
 int getImmediatePurposePointer(const Drone drone, Purpose *purposes) {
   int pointer = 0;
-  // РёС‰РµРј Р±Р»РёР¶Р°Р№С€СѓСЋ РµРґСѓ
+
   for (int i = 1; i < PURPOSES_COUNT; i++) {
-    pointer = (distance(drone, purposes[i]) < distance(drone, purposes[pointer])) ? i : pointer;
+    if (purposes[pointer].enable) {
+      pointer = (distance(drone, purposes[i]) < distance(drone, purposes[pointer])) && purposes[i].enable ? i : pointer;
+    }
+    else {
+      pointer++;
+    }
   }
 
   // if (!purposes[pointer].enable) {
-  //   pointer = getImmediatePurposePointer(drone, purposes);
+  //   return getImmediatePurposePointer(drone, purposes);
   // }
 
   return pointer;
@@ -356,7 +361,7 @@ void start() {
 
     checkCrushedDrone(drones);
 
-    if (isAllCrused = isAllDronesCrushed(drones)) {
+    if ((isAllCrused = isAllDronesCrushed(drones))) {
       break;
     }
 
