@@ -13,7 +13,7 @@
 #define MAX_X 60
 #define MAX_Y 30
 #define START_TRAILER_SIZE 1
-#define SLEEP 300000
+#define SLEEP 100000
 #define MAX_TRAILTER_SIZE 10
 #define PURPOSES_COUNT 5
 #define DRONES_COUNT 1
@@ -326,9 +326,10 @@ void refreshPurposes(Purpose *purposes) {
 void start() {
   uint8_t keyDirection = 0;
   _Bool isAllCrused = 0;
+  _Bool isStandBy = 0;
 
-  int msec = 0, trigger = 2000;
-  clock_t start = clock(), diff;
+  int msec = 0, trigger = 5000;
+  clock_t startTime;
 
 
   Drone *drones = initDrones();
@@ -343,8 +344,8 @@ void start() {
     // }
 
     for (size_t i = 0; i < DRONES_COUNT; i++) {
-      autoChangeDirection(&drones[i], purposes);
-      checkIntersectPurpose(&drones[i], purposes);
+      if (!isStandBy) autoChangeDirection(&drones[i], purposes);
+      if (!isStandBy) checkIntersectPurpose(&drones[i], purposes);
       move(&drones[i]);
       checkCrushDrone(&drones[i], (int)i + 1);
     }
@@ -354,11 +355,17 @@ void start() {
     }
 
     if (isAllPurposeDisabled(purposes)) {
-      diff = clock() - start;
+      if (!isStandBy) {
+        isStandBy = 1;
+        startTime = clock();
+      }
+
+      clock_t diff = clock() - startTime;
       msec = diff * 1000 / CLOCKS_PER_SEC;
 
-      if (msec == trigger) {
+      if (msec >= trigger) {
         refreshPurposes(purposes);
+        isStandBy = 0;
       }
     }
 
