@@ -4,18 +4,16 @@
 #include <unistd.h>
 #include <stdint.h>
 
-#define SET_RANDOM(min, max) ((min) + rand() % ((max) - (min) + 1))
+#define GET_RANDOM(max) (rand() % (max))
 
 #define GET_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define GET_MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define STRAT_X 10
-#define START_Y 10
-#define MAX_X 30
+#define MAX_X 60
 #define MAX_Y 30
 #define START_TRAILER_SIZE 1
 #define SLEEP 500000
-#define MAX_SIZE 10
+#define MAX_TRAILTER_SIZE 10
 #define PURPOSES_COUNT 5
 #define DRONES_COUNT 1
 
@@ -58,18 +56,17 @@ typedef struct Purpose {
 } Purpose;
 
 void updatePurposePosition(Purpose *purpose) {
-  purpose->x = SET_RANDOM(0, MAX_X);
-  purpose->y = SET_RANDOM(0, MAX_Y);
+  purpose->x = GET_RANDOM(MAX_X);
+  purpose->y = GET_RANDOM(MAX_Y);
 }
 
 Purpose *initPurposes() {
   Purpose *purposes = (Purpose *)malloc(sizeof(Purpose) * PURPOSES_COUNT);
 
   for (size_t i = 0; i < PURPOSES_COUNT; i++) {
-    Purpose purpose;
-    updatePurposePosition(&purpose);
-    purpose.enable = 1;
-    purposes[i] = purpose;
+    purposes[i].x = GET_RANDOM(MAX_X);
+    purposes[i].y = GET_RANDOM(MAX_Y);
+    purposes[i].enable = 1;
   }
 
   return purposes;
@@ -80,16 +77,16 @@ Drone *initDrones() {
 
   for (size_t i = 0; i < DRONES_COUNT; i++) {
     Drone drone;
-    drone.x = SET_RANDOM(0, MAX_X);
-    drone.y = SET_RANDOM(0, MAX_Y);
+    drone.x = GET_RANDOM(MAX_X);
+    drone.y = GET_RANDOM(MAX_Y);
     drone.tsize = START_TRAILER_SIZE;
-    drone.trailer = (Trailer *)malloc(sizeof(Trailer) * MAX_SIZE);
+    drone.trailer = (Trailer *)malloc(sizeof(Trailer) * MAX_TRAILTER_SIZE);
     drone.direction = LEFT;
     drone.enable = 1;
 
-    for (uint8_t i = 0; i < drone.tsize; ++i) {
-      drone.trailer[i].x = drone.x + i + 1;
-      drone.trailer[i].y = drone.y;
+    for (size_t j = 0; j < drone.tsize; j++) {
+      drone.trailer[j].x = (drone.x) + j + 1;
+      drone.trailer[j].y = drone.y;
     }
 
     drones[i] = drone;
@@ -105,7 +102,6 @@ void addDronesOnArea(Drone *drones, char area[][MAX_Y]) {
     for (size_t j = 0; j < drones[i].tsize; j++) {
       area[drones[i].trailer[j].x][drones[i].trailer[j].y] = '*';
     }
-
   }
 }
 
@@ -188,16 +184,14 @@ void checkPause(_Bool *isPaused, uint8_t keyDirection) {
 }
 
 int isMissionCompleted(Drone drone) {
-  return drone.tsize == MAX_SIZE;
+  return drone.tsize == MAX_TRAILTER_SIZE;
 }
 
-void checkIntersectPurpose(Drone *drones, Purpose *purposes) {
-  for (size_t i = 0; i < DRONES_COUNT; i++) {
-    for (size_t j = 0; j < PURPOSES_COUNT; j++) {
-      if (drones[i].x == purposes[j].x && drones[i].y == purposes[j].y) {
-        drones[i].tsize++;
-        purposes[j].enable = 0;
-      }
+void checkIntersectPurpose(Drone *drone, Purpose *purposes) {
+  for (size_t i = 0; i < PURPOSES_COUNT; i++) {
+    if (drone->x == purposes[i].x && drone->y == purposes[i].y) {
+      drone->tsize++;
+      purposes[i].enable = 0;
     }
   }
 }
@@ -231,32 +225,112 @@ _Bool isAllDronesCrushed(Drone *drones) {
   return 1;
 }
 
-void move(Drone drone) {
-  for (size_t i = drone.tsize - 1; i > 0; i--) {
-    drone.trailer[i] = drone.trailer[i - 1];
+void move(Drone *drone) {
+  for (size_t i = drone->tsize - 1; i > 0; i--) {
+    drone->trailer[i] = drone->trailer[i - 1];
   }
 
-  drone.trailer[0].x = drone.x;
-  drone.trailer[0].y = drone.y;
+  drone->trailer[0].x = drone->x;
+  drone->trailer[0].y = drone->y;
 
-  switch (drone.direction) {
+  switch (drone->direction) {
   case LEFT:
-    drone.x = GET_MAX(drone.x - 1, 0);
+    drone->x = GET_MAX(drone->x - 1, 0);
     break;
   case RIGHT:
-    drone.x = GET_MIN(drone.x + 1, MAX_X);
+    drone->x = GET_MIN(drone->x + 1, MAX_X);
     break;
   case UP:
-    drone.y = GET_MAX(drone.y - 1, 0);
+    drone->y = GET_MAX(drone->y - 1, 0);
     break;
   case DOWN:
-    drone.y = GET_MIN(drone.y + 1, MAX_Y);
+    drone->y = GET_MIN(drone->y + 1, MAX_Y);
     break;
   default:
     break;
   }
 
   // checkFieldBoundaries(drone);
+}
+
+void clear(Drone *drones, Purpose *purposes) {
+  free(purposes);
+
+  for (size_t i = 0; i < DRONES_COUNT; i++) {
+    free(drones[i].trailer);
+  }
+
+  free(drones);
+}
+
+void autoDroneDirection(Drone *drone, Purpose purpose) {
+  if (drone->direction == LEFT || drone->direction == RIGHT) {
+    if (drone->x == purpose.x) {
+      drone->direction = drone->y > purpose.y ? UP : DOWN;
+    }
+    return;
+  }
+
+  if (drone->direction == UP || drone->direction == DOWN) {
+    if (drone->y == purpose.y) {
+      drone->direction = drone->x > purpose.x ? LEFT : RIGHT;
+    }
+    return;
+  }
+
+  // if ((drone->direction == LEFT || drone->direction == RIGHT) && drone->y == purpose.y) {
+  //   return;
+  // }
+
+  // if ((drone->direction == LEFT || drone->direction == RIGHT) && drone->y != purpose.y) {
+  //   if (drone->x == purpose.x) {
+  //     drone->direction = UP;
+  //   }
+  //   return;
+  // }
+
+  // if ((drone->direction == UP || drone->direction == DOWN) && drone->x == purpose.x) {
+  //   return;
+  // }
+
+  // if ((drone->direction == UP || drone->direction == DOWN) && drone->x != purpose.x) {
+  //   if (drone->y == purpose.y) {
+  //     drone->direction = LEFT;
+  //   }
+  //   return;
+  // }
+}
+
+int distance(const Drone drone, Purpose purpose) { // РІС‹С‡РёСЃР»СЏРµС‚ РєРѕР»РёС‡РµСЃС‚РІРѕ С…РѕРґРѕРІ РґРѕ РµРґС‹
+  return (abs(drone.x - purpose.x) + abs(drone.y - purpose.y));
+}
+
+int getImmediatePurposePointer(const Drone drone, Purpose *purposes) {
+  int pointer = 0;
+  // РёС‰РµРј Р±Р»РёР¶Р°Р№С€СѓСЋ РµРґСѓ
+  for (int i = 1; i < PURPOSES_COUNT; i++) {
+    pointer = (distance(drone, purposes[i]) < distance(drone, purposes[pointer])) ? i : pointer;
+  }
+
+  // if (!purposes[pointer].enable) {
+  //   pointer = getImmediatePurposePointer(drone, purposes);
+  // }
+
+  return pointer;
+}
+
+void autoChangeDirection(Drone *drone, Purpose *purposes)
+{
+  int pointer = getImmediatePurposePointer(*drone, purposes);
+
+  if ((drone->direction == RIGHT || drone->direction == LEFT) && (drone->y != purposes[pointer].y)) {
+    // РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРµ РґРІРёР¶РµРЅРёРµ
+    drone->direction = (purposes[pointer].y > drone->y) ? DOWN : UP;
+  }
+  else if ((drone->direction == DOWN || drone->direction == UP) && (drone->x != purposes[pointer].x)) {
+    // РІРµСЂС‚РёРєР°Р»СЊРЅРѕРµ РґРІРёР¶РµРЅРёРµ
+    drone->direction = (purposes[pointer].x > drone->x) ? RIGHT : LEFT;
+  }
 }
 
 void start() {
@@ -275,10 +349,10 @@ void start() {
     // }
 
     for (size_t i = 0; i < DRONES_COUNT; i++) {
-      move(drones[i]);
+      autoChangeDirection(&drones[i], purposes);
+      checkIntersectPurpose(&drones[i], purposes);
+      move(&drones[i]);
     }
-
-    checkIntersectPurpose(drones, purposes);
 
     checkCrushedDrone(drones);
 
@@ -293,8 +367,10 @@ void start() {
   }
 
   if (isAllCrused) {
-    printf("All drones are crushed! =(");
+    printf("All drones are crushed! =(\n");
   }
+
+  clear(drones, purposes);
 
   // printf("Mission completed!\n");
 }
