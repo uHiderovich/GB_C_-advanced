@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <conio.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <time.h>
 #include "drone.h"
 
 void updatePurposePosition(Purpose *purpose) {
@@ -95,8 +90,6 @@ void setDirection(Drone *drone, uint8_t keyDirection) {
     return;
   }
 
-  drone->enable = 1;
-
   switch (keyDirection) {
   case KEY_UP:
     drone->direction = UP;
@@ -113,6 +106,8 @@ void setDirection(Drone *drone, uint8_t keyDirection) {
   default:
     break;
   }
+
+  drone->enable = 1;
 }
 
 void checkIntersectPurpose(Drone *drone, Purpose *purposes) {
@@ -131,9 +126,9 @@ int isCrushDrone(Drone drone) {
     }
   }
 
-  // if (drone.x < 0 || drone.y < 0 || drone.y >(MAX_Y - 1) || drone.x >(MAX_X - 1)) {
-  //   return 1;
-  // }
+  if (drone.x < 0 || drone.y < 0 || drone.y >(MAX_Y - 1) || drone.x >(MAX_X - 1)) {
+    return 1;
+  }
 
   return 0;
 }
@@ -146,21 +141,6 @@ _Bool isAllDronesCrushed(Drone *drones) {
   }
 
   return 1;
-}
-
-void checkFieldBoundaries(Drone *drone) {
-  if (drone->x < 0) {
-    drone->x = MAX_X - 1;
-  }
-  else if (drone->x >= MAX_X) {
-    drone->x = 0;
-  }
-  else if (drone->y < 0) {
-    drone->y = MAX_Y - 1;
-  }
-  else if (drone->y >= MAX_Y) {
-    drone->y = 0;
-  }
 }
 
 void move(Drone *drone) {
@@ -199,8 +179,6 @@ void move(Drone *drone) {
   default:
     break;
   }
-
-  checkFieldBoundaries(drone);
 }
 
 void clear(Drone *drones, Purpose *purposes) {
@@ -258,105 +236,4 @@ void refreshPurposes(Purpose *purposes) {
     purposes[i].enable = 1;
     updatePurposePosition(&purposes[i]);
   }
-}
-
-void start() {
-  uint8_t keyDirection = 0;
-  int manualOperationDroneNumber;
-
-  _Bool isAllCrused = 0;
-  _Bool isStandBy = 0;
-  _Bool isEnabelManualOperation = 0;
-
-  uint16_t msec = 0, trigger = 5000;
-  clock_t startTime;
-
-  Drone *drones = initDrones();
-  Purpose *purposes = initPurposes();
-
-  printWorkArea(drones, purposes);
-
-  while (keyDirection != KEY_STOP) {
-    if (kbhit()) {
-      keyDirection = getch();
-
-      if (keyDirection == KEY_HAND_CONTROL) {
-        if (isEnabelManualOperation) {
-          isEnabelManualOperation = 0;
-          drones[manualOperationDroneNumber - 1].autoControl = 1;
-        }
-        else {
-          printf("Enter the number of the drone for manual operation: ");
-          scanf("%d", &manualOperationDroneNumber);
-
-          if (manualOperationDroneNumber >= 1 && manualOperationDroneNumber <= DRONES_COUNT) {
-            isEnabelManualOperation = 1;
-            drones[manualOperationDroneNumber - 1].autoControl = 0;
-          }
-          else {
-            printf("Incorrect drone number!\n");
-          }
-        }
-      }
-
-      if (isEnabelManualOperation) {
-        setDirection(&drones[manualOperationDroneNumber - 1], keyDirection);
-      }
-    }
-
-    for (size_t i = 0; i < DRONES_COUNT; i++) {
-      if (drones[i].enable) {
-        if (!isStandBy && drones[i].autoControl) autoChangeDirection(&drones[i], purposes);
-        if (!isStandBy) checkIntersectPurpose(&drones[i], purposes);
-
-        if (isCrushDrone(drones[i])) {
-          drones[i].enable = 0;
-        }
-
-        move(&drones[i]);
-      }
-      else {
-        printf("Drone %d is crushed!\n", i + 1);
-      }
-    }
-
-    // if ((isAllCrused = isAllDronesCrushed(drones))) {
-    //   break;
-    // }
-
-    if (isAllPurposeDisabled(purposes)) {
-      if (!isStandBy) {
-        isStandBy = 1;
-        startTime = clock();
-      }
-
-      clock_t diff = clock() - startTime;
-      msec = diff * 1000 / CLOCKS_PER_SEC;
-
-      if (msec >= trigger) {
-        refreshPurposes(purposes);
-        isStandBy = 0;
-      }
-    }
-
-    usleep(DELAY);
-    system("cls");
-
-    printWorkArea(drones, purposes);
-  }
-
-  if (isAllCrused) {
-    printf("All drones are crushed! =(\n");
-  }
-
-  clear(drones, purposes);
-
-  // printf("Mission completed!\n");
-}
-
-
-int main() {
-  start();
-
-  return 0;
 }
