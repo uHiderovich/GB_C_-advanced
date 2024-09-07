@@ -7,16 +7,14 @@
 
 #define GET_RANDOM(max) (rand() % (max))
 
-#define GET_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define GET_MIN(a, b) ((a) < (b) ? (a) : (b))
-
 #define MAX_X 30
 #define MAX_Y 30
 #define START_TRAILER_SIZE 1
 #define DELAY 100000
 #define MAX_TRAILTER_SIZE 10
-#define PURPOSES_COUNT 1
+#define PURPOSES_COUNT 5
 #define DRONES_COUNT 1
+#define MENU_DELAY 1000000
 
 enum Controls
 {
@@ -37,6 +35,11 @@ enum Direction
   DOWN
 };
 
+typedef struct ProgramConfig
+{
+  uint8_t dronesCount;
+} ProgramConfig;
+
 typedef struct Trailer
 {
   uint8_t x;
@@ -45,34 +48,34 @@ typedef struct Trailer
 
 typedef struct Drone
 {
+  _Bool enable;
+  _Bool autoControl;
   uint8_t x;
   uint8_t y;
   uint8_t tsize;
   enum Direction direction;
   enum Controls controls;
   struct Trailer *trailer;
-  _Bool enable;
-  _Bool autoControl;
 } Drone;
 
 typedef struct Purpose
 {
+  _Bool enable;
   uint8_t x;
   uint8_t y;
-  _Bool enable;
 } Purpose;
 
 void updatePurposePosition(Purpose *purpose);
 
 Purpose *initPurposes();
 
-Drone *initDrones();
+Drone *initDrones(ProgramConfig config);
 
-void addDronesOnArea(Drone *drones, char area[][MAX_Y]);
+void addDronesOnArea(Drone *drones, char area[][MAX_Y], ProgramConfig config);
 
 void addPurposeOnArea(Purpose *purposes, char area[][MAX_Y]);
 
-void printWorkArea(Drone *drones, Purpose *purposes);
+void printWorkArea(Drone *drones, Purpose *purposes, ProgramConfig config);
 
 void setDirection(Drone *drone, uint8_t keyDirection);
 
@@ -84,11 +87,9 @@ void checkIntersectPurpose(Drone *drone, Purpose *purposes);
 
 int isCrushDrone(Drone drone);
 
-_Bool isAllDronesCrushed(Drone *drones);
+void move(Drone *drone, _Bool isStandBy);
 
-void move(Drone *drone);
-
-void clear(Drone *drones, Purpose *purposes);
+void clear(Drone *drones, Purpose *purposes, ProgramConfig config);
 
 void autoDroneDirection(Drone *drone, Purpose purpose);
 
@@ -101,5 +102,7 @@ void autoChangeDirection(Drone *drone, Purpose *purposes);
 int isAllPurposeDisabled(Purpose *purposes);
 
 void refreshPurposes(Purpose *purposes);
+
+void checkFieldBoundaries(Drone *drone);
 
 #endif /* DRONE_H */

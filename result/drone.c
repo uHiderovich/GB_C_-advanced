@@ -17,10 +17,10 @@ Purpose *initPurposes() {
   return purposes;
 }
 
-Drone *initDrones() {
-  Drone *drones = (Drone *)malloc(sizeof(Drone) * DRONES_COUNT);
+Drone *initDrones(ProgramConfig config) {
+  Drone *drones = (Drone *)malloc(sizeof(Drone) * config.dronesCount);
 
-  for (size_t i = 0; i < DRONES_COUNT; i++) {
+  for (size_t i = 0; i < config.dronesCount; i++) {
     Drone drone;
     drone.x = GET_RANDOM(MAX_X);
     drone.y = GET_RANDOM(MAX_Y);
@@ -41,8 +41,8 @@ Drone *initDrones() {
   return drones;
 }
 
-void addDronesOnArea(Drone *drones, char area[][MAX_Y]) {
-  for (size_t i = 0; i < DRONES_COUNT; i++) {
+void addDronesOnArea(Drone *drones, char area[][MAX_Y], ProgramConfig config) {
+  for (size_t i = 0; i < config.dronesCount; i++) {
     area[drones[i].x][drones[i].y] = '@';
 
     for (size_t j = 0; j < drones[i].tsize; j++) {
@@ -59,7 +59,7 @@ void addPurposeOnArea(Purpose *purposes, char area[][MAX_Y]) {
   }
 }
 
-void printWorkArea(Drone *drones, Purpose *purposes) {
+void printWorkArea(Drone *drones, Purpose *purposes, ProgramConfig config) {
   char work_area[MAX_X][MAX_Y];
 
   for (int i = 0; i < MAX_X; ++i) {
@@ -70,7 +70,7 @@ void printWorkArea(Drone *drones, Purpose *purposes) {
 
   addPurposeOnArea(purposes, work_area);
 
-  addDronesOnArea(drones, work_area);
+  addDronesOnArea(drones, work_area, config);
 
   for (int j = 0; j < MAX_Y; ++j) {
     for (int i = 0; i < MAX_X; ++i) {
@@ -106,8 +106,6 @@ void setDirection(Drone *drone, uint8_t keyDirection) {
   default:
     break;
   }
-
-  drone->enable = 1;
 }
 
 void checkIntersectPurpose(Drone *drone, Purpose *purposes) {
@@ -126,24 +124,25 @@ int isCrushDrone(Drone drone) {
     }
   }
 
-  if (drone.x < 0 || drone.y < 0 || drone.y >(MAX_Y - 1) || drone.x >(MAX_X - 1)) {
-    return 1;
-  }
-
   return 0;
 }
 
-_Bool isAllDronesCrushed(Drone *drones) {
-  for (size_t i = 0; i < DRONES_COUNT; i++) {
-    if (drones[i].enable) {
-      return 0;
-    }
+void checkFieldBoundaries(Drone *drone) {
+  if (drone->x < 0) {
+    drone->x = MAX_X - 1;
   }
-
-  return 1;
+  else if (drone->x >= MAX_X) {
+    drone->x = 0;
+  }
+  else if (drone->y < 0) {
+    drone->y = MAX_Y - 1;
+  }
+  else if (drone->y >= MAX_Y) {
+    drone->y = 0;
+  }
 }
 
-void move(Drone *drone) {
+void move(Drone *drone, _Bool isStandBy) {
   for (size_t i = drone->tsize - 1; i > 0; i--) {
     drone->trailer[i] = drone->trailer[i - 1];
   }
@@ -154,37 +153,39 @@ void move(Drone *drone) {
   switch (drone->direction) {
   case LEFT:
     drone->x = (drone->x - 1);
-    // if (drone->x == 0) {
-    //   drone->direction = (drone->y == 0 ? DOWN : UP);
-    // }
+    if (isStandBy && (drone->x == 0)) {
+      drone->direction = (drone->y == 0 ? DOWN : UP);
+    }
     break;
   case RIGHT:
     drone->x = (drone->x + 1);
-    // if (drone->x == (MAX_X - 1)) {
-    //   drone->direction = (drone->y == (MAX_Y - 1) ? UP : DOWN);
-    // }
+    if (isStandBy && (drone->x == (MAX_X - 1))) {
+      drone->direction = (drone->y == (MAX_Y - 1) ? UP : DOWN);
+    }
     break;
   case UP:
     drone->y = (drone->y - 1);
-    // if (drone->y == 0) {
-    //   drone->direction = (drone->x == 0 ? RIGHT : LEFT);
-    // }
+    if (isStandBy && (drone->y == 0)) {
+      drone->direction = (drone->x == 0 ? RIGHT : LEFT);
+    }
     break;
   case DOWN:
     drone->y = (drone->y + 1);
-    // if (drone->y == (MAX_Y - 1)) {
-    //   drone->direction = (drone->x == (MAX_X - 1) ? LEFT : RIGHT);
-    // }
+    if (isStandBy && (drone->y == (MAX_Y - 1))) {
+      drone->direction = (drone->x == (MAX_X - 1) ? LEFT : RIGHT);
+    }
     break;
   default:
     break;
   }
+
+  // checkFieldBoundaries(drone);
 }
 
-void clear(Drone *drones, Purpose *purposes) {
+void clear(Drone *drones, Purpose *purposes, ProgramConfig config) {
   free(purposes);
 
-  for (size_t i = 0; i < DRONES_COUNT; i++) {
+  for (size_t i = 0; i < config.dronesCount; i++) {
     free(drones[i].trailer);
   }
 
