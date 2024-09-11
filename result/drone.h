@@ -83,7 +83,7 @@ void setDirection(Drone *drone, uint8_t keyDirection);
 
 void setDirection(Drone *drone, uint8_t keyDirection);
 
-void checkIntersectPurpose(Drone *drone, Purpose *purposes);
+_Bool checkIntersectPurpose(Drone *drone, Purpose *purposes);
 
 int isCrushDrone(Drone drone);
 
@@ -98,8 +98,6 @@ int distance(const Drone drone, Purpose purpose);
 int getImmediatePurposePointer(const Drone drone, Purpose *purposes);
 
 void autoChangeDirection(Drone *drone, Purpose *purposes);
-
-int isAllPurposeDisabled(Purpose *purposes);
 
 void refreshPurposes(Purpose *purposes);
 

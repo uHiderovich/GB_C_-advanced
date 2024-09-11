@@ -1,5 +1,6 @@
 #include "drone.h"
 
+
 void updatePurposePosition(Purpose *purpose) {
   purpose->x = GET_RANDOM(MAX_X);
   purpose->y = GET_RANDOM(MAX_Y);
@@ -108,13 +109,21 @@ void setDirection(Drone *drone, uint8_t keyDirection) {
   }
 }
 
-void checkIntersectPurpose(Drone *drone, Purpose *purposes) {
+_Bool checkIntersectPurpose(Drone *drone, Purpose *purposes) {
+  uint8_t countDesabled = 0;
+
   for (size_t i = 0; i < PURPOSES_COUNT; i++) {
     if (drone->x == purposes[i].x && drone->y == purposes[i].y) {
       drone->tsize++;
       purposes[i].enable = 0;
     }
+
+    if (!purposes[i].enable) {
+      countDesabled++;
+    }
   }
+
+  return countDesabled == PURPOSES_COUNT;
 }
 
 int isCrushDrone(Drone drone) {
@@ -220,16 +229,6 @@ void autoChangeDirection(Drone *drone, Purpose *purposes) {
   else if ((drone->direction == DOWN || drone->direction == UP) && (drone->x != purposes[pointer].x)) {
     drone->direction = (purposes[pointer].x > drone->x) ? RIGHT : LEFT;
   }
-}
-
-int isAllPurposeDisabled(Purpose *purposes) {
-  for (size_t i = 0; i < PURPOSES_COUNT; i++) {
-    if (purposes[i].enable) {
-      return 0;
-    }
-  }
-
-  return 1;
 }
 
 void refreshPurposes(Purpose *purposes) {

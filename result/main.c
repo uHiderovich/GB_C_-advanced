@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <time.h>
+
 #include "drone.h"
 
 void start(ProgramConfig config) {
@@ -11,7 +12,7 @@ void start(ProgramConfig config) {
   int8_t manualOperationDroneNumber = -1;
 
   uint16_t msec = 0, trigger = 5000;
-  clock_t startTime;
+  clock_t startTime = 0;
 
   Drone *drones = initDrones(config);
   Purpose *purposes = initPurposes();
@@ -46,9 +47,25 @@ void start(ProgramConfig config) {
       }
     }
 
-    if (isAllPurposeDisabled(purposes)) {
-      if (!isStandBy) {
-        isStandBy = 1;
+    for (size_t i = 0; i < config.dronesCount; i++) {
+      if (drones[i].enable) {
+        if (!isStandBy && drones[i].autoControl) autoChangeDirection(&drones[i], purposes);
+
+        if (isCrushDrone(drones[i])) drones[i].enable = 0;
+
+        if (!isStandBy) {
+          isStandBy = checkIntersectPurpose(&drones[i], purposes);
+        };
+
+        move(&drones[i], isStandBy);
+      }
+      else {
+        printf("Drone %d is crushed!\n", i + 1);
+      }
+    }
+
+    if (isStandBy) {
+      if (!startTime) {
         startTime = clock();
       }
 
@@ -58,21 +75,7 @@ void start(ProgramConfig config) {
       if (msec >= trigger) {
         refreshPurposes(purposes);
         isStandBy = 0;
-      }
-    }
-
-    for (size_t i = 0; i < config.dronesCount; i++) {
-      if (drones[i].enable) {
-        if (!isStandBy && drones[i].autoControl) autoChangeDirection(&drones[i], purposes);
-
-        if (!isStandBy) checkIntersectPurpose(&drones[i], purposes);
-
-        if (isCrushDrone(drones[i])) drones[i].enable = 0;
-
-        move(&drones[i], isStandBy);
-      }
-      else {
-        printf("Drone %d is crushed!\n", i + 1);
+        startTime = 0;
       }
     }
 
@@ -91,7 +94,7 @@ int main() {
 
   while (1)
   {
-    printf("Enter the number of drones in the area:\n");
+    printf("Enter the number of drones in the area (from 1 to 5):\n");
     scanf("%d", &config.dronesCount);
 
     if (config.dronesCount < 1 || config.dronesCount > 5) {
